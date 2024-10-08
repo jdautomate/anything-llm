@@ -1,0 +1,12 @@
+resources:
+  - Configmap_anything-llm-config.yaml
+  # - Configmap_chromadb-auth.yaml
+  # - Configmap_chromadb-log-config.yaml
+  - Deployment_anything-llm.yaml
+  - ingress.yaml
+  - pvc.yaml
+  - Secret_anything-tls.yaml
+  # - Secret_chromadb-auth.yaml
+  - service.yaml
+  # - Service_chromadb.yaml
+  # - Statefulset_chromadb.yaml

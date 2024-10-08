@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: anything-llm
+  namespace: anything-llm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: anything-llm 
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: anything-llm 
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: anything-llm
+          image: 543714519113.dkr.ecr.us-west-1.amazonaws.com/ghcr/mintplex-labs/anything-llm:1.2.2
+          ports:
+            - containerPort: 3001
+          volumeMounts:
+            - mountPath: /app/server/storage
+              name: server-storage
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsUser: 1000
+            runAsGroup: 1000
+            capabilities:
+              add:
+                - SYS_ADMIN
+      volumes:
+        - name: server-storage
+          persistentVolumeClaim:
+            claimName: server-storage
+      restartPolicy: Always

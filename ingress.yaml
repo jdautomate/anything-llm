@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: anything-llm-ingress
+  namespace: anything-llm
+  annotations:
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-west-1:817264447024:certificate/43bb8de9-f240-4d3d-96ae-766272137b9d
+    alb.ingress.kubernetes.io/scheme: internal
+    alb.ingress.kubernetes.io/success-codes: 200-499
+    alb.ingress.kubernetes.io/tags: environment=dev,task-group=website,created-by=eks,maintainer=justin.leber,role=alb,owner=web
+    alb.ingress.kubernetes.io/target-type: ip
+    external-dns.alpha.kubernetes.io/hostname: anythingllm.us-west-1.eks.dev.saas.openvpn.in
+spec:
+  ingressClassName: alb
+  rules:
+    - host: anythingllm-dev.openvpn.in
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: anything-llm
+                port:
+                  number: 3001

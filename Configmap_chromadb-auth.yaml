@@ -1,0 +1,11 @@
+apiVersion: v1
+data:
+  CHROMA_AUTH_TOKEN_TRANSPORT_HEADER: Authorization
+  CHROMA_SERVER_AUTHN_PROVIDER: chromadb.auth.token_authn.TokenAuthenticationServerProvider
+kind: ConfigMap
+metadata:
+  creationTimestamp: "2024-10-08T20:26:02Z"
+  labels:
+    app.kubernetes.io/instance: anything-llm
+  name: anything-llm-chromadb-token-auth-config
+  namespace: anything-llm

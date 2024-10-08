@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app.kubernetes.io/instance: anything-llm
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: chromadb
+    app.kubernetes.io/version: 0.5.5
+    helm.sh/chart: chromadb-0.1.20
+  name: anything-llm-chromadb
+  namespace: anything-llm
+spec:
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  podManagementPolicy: Parallel
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: anything-llm
+      app.kubernetes.io/name: chromadb
+  serviceName: anything-llm-chromadb
+  template:
+    metadata:
+      annotations:
+        checksum/config: 73f18cf1bd1eb0747c140d95ea18288297d8cd019810114c5d41d8bdd360832a
+      labels:
+        app.kubernetes.io/instance: anything-llm
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: chromadb
+    spec:
+      affinity: {}
+      containers:
+      - env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        - name: IS_PERSISTENT
+          value: "true"
+        - name: PERSIST_DIRECTORY
+          value: /index_data
+        - name: ALLOW_RESET
+          value: "false"
+        - name: ANONYMIZED_TELEMETRY
+          value: "false"
+        - name: CHROMA_SERVER_CORS_ALLOW_ORIGINS
+          value: '["*"]'
+        - name: CHROMA_SERVER_HTTP_PORT
+          value: "8000"
+        - name: CHROMA_SERVER_AUTHN_CREDENTIALS
+          valueFrom:
+            secretKeyRef:
+              key: token
+              name: chromadb-auth
+        envFrom:
+        - configMapRef:
+            name: anything-llm-chromadb-token-auth-config
+        image: ghcr.io/chroma-core/chroma:0.5.5
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 40
+          periodSeconds: 5
+          successThreshold: 1
+          tcpSocket:
+            port: 8000
+          timeoutSeconds: 10
+        name: chromadb
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 20
+          periodSeconds: 5
+          successThreshold: 1
+          tcpSocket:
+            port: 8000
+          timeoutSeconds: 10
+        resources: {}
+        securityContext: {}
+        startupProbe:
+          failureThreshold: 1000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          successThreshold: 1
+          tcpSocket:
+            port: 8000
+          timeoutSeconds: 1
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /chroma/log_config.yaml
+          name: log-config
+          subPath: log_config.yaml
+        - mountPath: /index_data
+          name: data
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 5
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: anything-llm-chromadb-log-config
+        name: log-config
+  updateStrategy:
+    rollingUpdate:
+      partition: 0
+    type: RollingUpdate
+  volumeClaimTemplates:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Gi
+      volumeMode: Filesystem
+      storageClassName: gp3-encrypted
+
